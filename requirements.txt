@@ -4,3 +4,9 @@ fastapi
 uvicorn
 httpx
 python-dotenv
+pytest
+anyio
+pytest-asyncio
+pytest-tornasync
+pytest-trio
+pytest-twisted

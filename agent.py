@@ -46,94 +46,97 @@ A2A_TOOL = {
 async def run_agent(directory: str):
     # Connect to MCP server
     mcp = MCPClient("mcp_filesystem.py")
-    await mcp.connect()
-
-    # Discover tools from MCP + add A2A tool
-    mcp_tools = await mcp.get_tools()
-    all_tools = mcp_tools + [A2A_TOOL]
-
-    print(f"\n🛠  Tools loaded from MCP: {[t['function']['name'] for t in mcp_tools]}")
-    print(f"🛠  A2A tool: sort_by_length\n")
-
-    messages = [
-        {
-            "role": "system",
-            "content": (
-                "You are a file organization agent. "
-                "When asked to sort files by filename length:\n"
-                "1. Call list_files to get all files\n"
-                "2. Call sort_by_length to delegate sorting to the sub-agent\n"
-                "3. For each file in each bucket, call move_file to move it to "
-                "./sorted/short, ./sorted/medium, or ./sorted/long\n"
-                "4. Report a final summary."
-            )
-        },
-        {
-            "role": "user",
-            "content": f"Sort all files in '{directory}' by filename length."
-        }
-    ]
-
-    print(f"🤖 Agent starting — sorting files in: {directory}\n")
-
     try:
-        # Agentic loop
-        while True:
-            response = client.chat.completions.create(
-                model=MODEL,
-                messages=messages,
-                tools=all_tools,
-                tool_choice="auto",
-                max_tokens=4096
-            )
+        await mcp.connect()
 
-            message = response.choices[0].message
-            finish_reason = response.choices[0].finish_reason
+        # Discover tools from MCP + add A2A tool
+        mcp_tools = await mcp.get_tools()
+        all_tools = mcp_tools + [A2A_TOOL]
 
-            # Append assistant turn to history
-            messages.append({
-                "role": "assistant",
-                "content": message.content or "",
-                "tool_calls": [
-                    {
-                        "id": tc.id,
-                        "type": "function",
-                        "function": {
-                            "name": tc.function.name,
-                            "arguments": tc.function.arguments
-                        }
-                    }
-                    for tc in (message.tool_calls or [])
-                ] or None
-            })
+        print(f"\n🛠  Tools loaded from MCP: {[t['function']['name'] for t in mcp_tools]}")
+        print(f"🛠  A2A tool: sort_by_length\n")
 
-            # Done
-            if finish_reason == "stop" or not message.tool_calls:
-                print("\n✅ Agent finished:\n")
-                print(message.content)
-                break
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are a file organization agent. "
+                    "When asked to sort files by filename length:\n"
+                    "1. Call list_files to get all files\n"
+                    "2. Call sort_by_length to delegate sorting to the sub-agent\n"
+                    "3. For each file in each bucket, call move_file to move it to "
+                    "./sorted/short, ./sorted/medium, or ./sorted/long\n"
+                    "4. Report a final summary."
+                )
+            },
+            {
+                "role": "user",
+                "content": f"Sort all files in '{directory}' by filename length."
+            }
+        ]
 
-            # Handle tool calls
-            for tool_call in message.tool_calls:
-                name = tool_call.function.name
-                args = json.loads(tool_call.function.arguments)
+        print(f"🤖 Agent starting — sorting files in: {directory}\n")
 
-                print(f"🔧 Calling tool: {name}({args})")
+        try:
+            # Agentic loop
+            while True:
+                response = client.chat.completions.create(
+                    model=MODEL,
+                    messages=messages,
+                    tools=all_tools,
+                    tool_choice="auto",
+                    max_tokens=4096
+                )
 
-                # Route: MCP tools vs A2A tool
-                if name == "sort_by_length":
-                    result = await sort_by_length(args["files"])
-                else:
-                    # All filesystem tools go through MCP
-                    result = await mcp.call_tool(name, args)
+                message = response.choices[0].message
+                finish_reason = response.choices[0].finish_reason
 
-                print(f"   ↳ {result[:120]}{'...' if len(result) > 120 else ''}\n")
-
+                # Append assistant turn to history
                 messages.append({
-                    "role": "tool",
-                    "tool_call_id": tool_call.id,
-                    "content": result
+                    "role": "assistant",
+                    "content": message.content or "",
+                    "tool_calls": [
+                        {
+                            "id": tc.id,
+                            "type": "function",
+                            "function": {
+                                "name": tc.function.name,
+                                "arguments": tc.function.arguments
+                            }
+                        }
+                        for tc in (message.tool_calls or [])
+                    ] or None
                 })
+
+                # Done
+                if finish_reason == "stop" or not message.tool_calls:
+                    print("\n✅ Agent finished:\n")
+                    print(message.content)
+                    break
+
+                # Handle tool calls
+                for tool_call in message.tool_calls:
+                    name = tool_call.function.name
+                    args = json.loads(tool_call.function.arguments)
+
+                    print(f"🔧 Calling tool: {name}({args})")
+
+                    # Route: MCP tools vs A2A tool
+                    if name == "sort_by_length":
+                        result = await sort_by_length(args["files"])
+                    else:
+                        # All filesystem tools go through MCP
+                        result = await mcp.call_tool(name, args)
+
+                    print(f"   ↳ {result[:120]}{'...' if len(result) > 120 else ''}\n")
+
+                    messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": result
+                    })
+        finally:
+            await mcp.disconnect()
 
     finally:
         await mcp.disconnect()

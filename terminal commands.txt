@@ -15,6 +15,8 @@ source .venv/bin/activate
 
 # 4. Install dependencies
 pip install groq fastapi uvicorn httpx python-dotenv mcp
+pip install -r requirements.txt
+pip freeze > requirements.txt
 
 # 5. Open in VS Code
 code .
@@ -76,3 +78,6 @@ git pull origin main
 git checkout -b MCP-with-A2A
 > Push to github
 git push -u origin MCP-with-A2A
+
+Pull Request
+-----------------------
