@@ -25,7 +25,7 @@ def temp_test_dir():
         with open(os.path.join(temp_dir, file), 'w') as f:
             f.write("test content")
     yield temp_dir
-    shutil.rmtree(temp_dir)
+    # shutil.rmtree(temp_dir)
 
 
 @pytest.fixture
@@ -33,7 +33,7 @@ def empty_temp_dir():
     """Create an empty temporary directory."""
     temp_dir = tempfile.mkdtemp()
     yield temp_dir
-    shutil.rmtree(temp_dir)
+    # shutil.rmtree(temp_dir)
 
 
 class TestSortByLength:
