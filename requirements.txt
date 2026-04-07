@@ -1,0 +1,6 @@
+groq
+mcp
+fastapi
+uvicorn
+httpx
+python-dotenv

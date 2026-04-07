@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Agent",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/agent.py",
+      "args": ["./test_dir"],
+      "console": "integratedTerminal",
+      "envFile": "${workspaceFolder}/.env"
+    },
+    {
+      "name": "Run Sorting Sub-Agent",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/sorting_agent.py",
+      "console": "integratedTerminal"
+    }
+  ]
+}
