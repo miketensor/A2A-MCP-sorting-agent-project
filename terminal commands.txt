@@ -47,3 +47,16 @@ git add .
 git commit -m "Initial commit"
 > Create repo and push
 gh repo create A2A-MCP-sorting-agent-project --public --source=. --remote=origin --push
+
+
+Commit changes
+------------------------
+git status
+> stage everything
+git add .
+> commit 
+git commit -m "Update: describe your changes"
+> branch main
+git checkout main 
+> push to Git
+git push origin main
