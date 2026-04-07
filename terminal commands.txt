@@ -81,3 +81,10 @@ git push -u origin MCP-with-A2A
 
 Pull Request
 -----------------------
+> create PR
+gh pr create --base main --head MCP-with-A2A --title "Add MCP with A2A integration" --body "This PR adds the MCP agent integration with A2A. Includes initial unit tests and requirements updates."
+> merge
+gh pr merge MCP-with-A2A --merge
+> update locally
+git checkout main
+git pull origin main
