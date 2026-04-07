@@ -1,0 +1,49 @@
+Project Setup
+---------------------------
+# 1. Create project folder
+mkdir file-sorter-agent
+cd file-sorter-agent
+
+# 2. Create virtual environment
+python -m venv .venv
+
+# 3. Activate it
+# Windows:
+.venv\Scripts\activate
+# Mac/Linux:
+source .venv/bin/activate
+
+# 4. Install dependencies
+pip install groq fastapi uvicorn httpx python-dotenv mcp
+
+# 5. Open in VS Code
+code .
+
+> VS Code Configuration
+.vscode/settings.json
+.vscode/launch.json
+
+> .env
+
+
+Test directory
+------------------------------------------
+mkdir test_dir
+mkdir test_dir/subdir
+
+# Windows PowerShell
+New-Item test_dir/ab.txt
+New-Item test_dir/hello.txt
+New-Item test_dir/this_is_a_medium_name.txt
+New-Item test_dir/subdir/a_very_long_filename_indeed.txt
+New-Item test_dir/subdir/ok.txt
+
+Github From root folder
+------------------------
+git init
+> Create a .gitignore file
+> Stage and commit your code
+git add .
+git commit -m "Initial commit"
+> Create repo and push
+gh repo create A2A-MCP-sorting-agent-project --public --source=. --remote=origin --push
