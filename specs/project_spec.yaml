@@ -1,0 +1,100 @@
+goal: Demonstrate an agent-driven file sorting system using MCP (Model Context Protocol) and A2A (Agent-to-Agent) communication patterns to organize files by filename length
+
+features:
+  - name: MCP-based File Operations
+    description: Expose filesystem operations (list files, move files) through an MCP server that can be discovered and invoked by the main agent
+
+  - name: A2A Sub-Agent Delegation
+    description: Delegate file sorting logic to an independent FastAPI-based sub-agent that categorizes files by filename length into buckets
+
+  - name: LLM-Driven Orchestration
+    description: Use a language model (Groq) to orchestrate the workflow by calling tools in sequence to list, sort, and move files
+
+  - name: Automated File Organization
+    description: Automatically organize files into categorized directories based on filename length thresholds
+
+requirements:
+  - id: REQ-001
+    description: The system shall provide an MCP server that exposes file system operations as discoverable tools
+    acceptance_criteria:
+      - MCP server exposes a list_files tool that recursively scans directories
+      - MCP server exposes a move_file tool that relocates files to target directories
+      - Tools are discoverable via MCP protocol list_tools endpoint
+      - Tool schemas include proper input validation and descriptions
+
+  - id: REQ-002
+    description: The system shall implement an A2A sub-agent for file sorting logic
+    acceptance_criteria:
+      - Sub-agent runs as an independent FastAPI service on port 8001
+      - Sub-agent accepts a list of file objects with name_length property
+      - Sub-agent returns files categorized into short (1-5 chars), medium (6-15 chars), and long (16+ chars) buckets
+      - Sub-agent responds to POST requests at /sort endpoint
+
+  - id: REQ-003
+    description: The main agent shall connect to the MCP server and discover available tools
+    acceptance_criteria:
+      - Agent establishes connection to MCP server via stdio transport
+      - Agent retrieves and converts MCP tools to LLM-compatible format
+      - Agent combines MCP tools with A2A tool definitions
+      - Agent handles connection lifecycle (connect and disconnect)
+
+  - id: REQ-004
+    description: The main agent shall orchestrate file sorting using LLM-driven tool calls
+    acceptance_criteria:
+      - Agent sends user request to LLM with available tools
+      - Agent handles tool call responses from LLM
+      - Agent routes MCP tool calls to MCP server
+      - Agent routes A2A tool calls to sub-agent service
+      - Agent maintains conversation history with tool results
+      - Agent continues until LLM indicates completion
+
+  - id: REQ-005
+    description: The system shall organize files into categorized directories based on filename length
+    acceptance_criteria:
+      - Files with names 1-5 characters are moved to ./sorted/short/
+      - Files with names 6-15 characters are moved to ./sorted/medium/
+      - Files with names 16+ characters are moved to ./sorted/long/
+      - Filename length is calculated without file extension
+      - Target directories are created automatically if they do not exist
+
+  - id: REQ-006
+    description: The list_files tool shall provide file metadata for sorting decisions
+    acceptance_criteria:
+      - Returns full path for each file found
+      - Returns filename including extension
+      - Returns name_length calculated without extension
+      - Recursively scans all subdirectories
+      - Returns results as JSON array
+
+  - id: REQ-007
+    description: The move_file tool shall safely relocate files to target directories
+    acceptance_criteria:
+      - Creates destination directory if it does not exist
+      - Preserves original filename in destination
+      - Returns confirmation message with source and destination paths
+      - Handles file system errors gracefully
+
+  - id: REQ-008
+    description: The system shall handle errors and edge cases gracefully
+    acceptance_criteria:
+      - Handles MCP connection failures with proper cleanup
+      - Handles A2A sub-agent connection timeouts and errors
+      - Handles empty directories without crashing
+      - Handles invalid tool call arguments
+      - Handles LLM API errors
+      - Ensures MCP disconnect is called even on errors
+
+  - id: REQ-009
+    description: The system shall support configuration via environment variables
+    acceptance_criteria:
+      - Groq API key is loaded from GROQ_API_KEY environment variable
+      - Environment variables are loaded from .env file
+      - System fails gracefully if required environment variables are missing
+
+  - id: REQ-010
+    description: The system shall provide a command-line interface for file sorting
+    acceptance_criteria:
+      - Accepts directory path as command-line argument
+      - Defaults to ./test_dir if no argument provided
+      - Displays progress messages during execution
+      - Displays final summary when sorting is complete
