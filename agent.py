@@ -2,11 +2,47 @@ import os, json, asyncio, httpx
 from groq import Groq
 from dotenv import load_dotenv
 from mcp_client import MCPClient
+import uuid
 
 load_dotenv()
 
 client = Groq(api_key=os.environ["GROQ_API_KEY"])
 MODEL = "llama-3.3-70b-versatile"
+
+async def request_human_approval(source: str, destination_dir: str) -> bool:
+    request_id = str(uuid.uuid4())[:8]
+
+    async with httpx.AsyncClient() as http:
+        # Submit — triggers email
+        await http.post(
+            "http://localhost:8002/request-approval",
+            json={
+                "request_id": request_id,
+                "source": source,
+                "destination_dir": destination_dir
+            }
+        )
+
+        print(f"📧 Approval email sent (id: {request_id}) — waiting for human...")
+
+        # Poll until human clicks link or request expires
+        while True:
+            await asyncio.sleep(3)
+            resp = await http.get(
+                f"http://localhost:8002/decision/{request_id}"
+            )
+            decision = resp.json()["decision"]
+
+            if decision == "approved":
+                print(f"   ✅ Approved by human")
+                return True
+            elif decision == "rejected":
+                print(f"   ❌ Rejected by human (or expired)")
+                return False
+            # else "pending" → keep polling
+
+
+
 
 # ── A2A sub-agent call ───────────────────────────────────────────────────────
 
@@ -125,8 +161,20 @@ async def run_agent(directory: str):
                     if name == "sort_by_length":
                         result = await sort_by_length(args["files"])
                     else:
+                        if name == "move_file":
+                            approved = await request_human_approval(
+                                args["source"],
+                                args["destination_dir"]
+                            )
+                            if approved:
+                                result = await mcp.call_tool(name, args)
+                            else:
+                                result = f"Move rejected by human: {args['source']}"
+                        else:
+                            result = await mcp.call_tool(name, args)   
+                        
                         # All filesystem tools go through MCP
-                        result = await mcp.call_tool(name, args)
+                        # result = await mcp.call_tool(name, args)
 
                     print(f"   ↳ {result[:120]}{'...' if len(result) > 120 else ''}\n")
 
