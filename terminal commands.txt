@@ -15,6 +15,8 @@ source .venv/bin/activate
 
 # 4. Install dependencies
 pip install groq fastapi uvicorn httpx python-dotenv mcp
+pip install -r requirements.txt
+pip freeze > requirements.txt
 
 # 5. Open in VS Code
 code .
@@ -49,6 +51,12 @@ git commit -m "Initial commit"
 gh repo create A2A-MCP-sorting-agent-project --public --source=. --remote=origin --push
 
 
+Execute
+------------------------
+python sorting_agent.py
+python agent.py ./test_dir
+
+
 Commit changes
 ------------------------
 git status
@@ -60,3 +68,16 @@ git commit -m "Update: describe your changes"
 git checkout main 
 > push to Git
 git push origin main
+
+New branch
+------------------------
+git checkout main
+> load latest version
+git pull origin main
+> create a new branch
+git checkout -b MCP-with-A2A
+> Push to github
+git push -u origin MCP-with-A2A
+
+Pull Request
+-----------------------
