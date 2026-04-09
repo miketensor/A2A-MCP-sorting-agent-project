@@ -1,0 +1,44 @@
+name: Sync to Google Drive
+
+on:
+  push:
+    branches:
+      - main        # ← only stable code goes to Drive
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install rclone
+        run: curl https://rclone.org/install.sh | sudo bash
+
+      - name: Authenticate to Google Drive
+        env:
+          SA_JSON: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          echo "$SA_JSON" > /tmp/sa.json
+          rclone config create gdrive drive \
+            service_account_file /tmp/sa.json \
+            scope drive \
+            --non-interactive
+
+      - name: Sync to Drive
+        env:
+          FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+        run: |
+          rclone sync . gdrive: \
+            --drive-root-folder-id "$FOLDER_ID" \
+            --exclude ".git/**" \
+            --exclude ".github/**" \
+            --exclude ".venv/**" \
+            --exclude "__pycache__/**" \
+            --exclude "*.pyc" \
+            --exclude "sorted/**" \
+            --create-empty-src-dirs \
+            --transfers 8 \
+            --verbose

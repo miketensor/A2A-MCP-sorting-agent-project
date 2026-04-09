@@ -88,3 +88,8 @@ gh pr merge MCP-with-A2A --merge
 > update locally
 git checkout main
 git pull origin main
+
+Gdrive service account
+-------------
+github-action-sync@github-sync-project-492815.iam.gserviceaccount.com
+folder_id https://drive.google.com/drive/folders/1tTWojM-hSWsQ22YIbn0QF2j9IBRlrFAM
