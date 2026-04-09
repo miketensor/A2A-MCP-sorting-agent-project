@@ -17,29 +17,30 @@ jobs:
       - name: Install rclone
         run: curl https://rclone.org/install.sh | sudo bash
 
-      - name: Authenticate to Google Drive
+      - name: Authenticate and Sync
         env:
-          SA_JSON: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}
-        run: |
-          echo "$SA_JSON" > /tmp/sa.json
-          rclone config create gdrive drive \
-            service_account_file /tmp/sa.json \
-            scope drive \
-            --non-interactive
-
-      - name: Sync to Drive
-        env:
+          CLIENT_ID: ${{ secrets.GDRIVE_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.GDRIVE_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.GDRIVE_REFRESH_TOKEN }}
           FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
         run: |
+          # Create the rclone config file using secrets
+          mkdir -p ~/.config/rclone
+          cat << EOF > ~/.config/rclone/rclone.conf
+          [gdrive]
+          type = drive
+          client_id = $CLIENT_ID
+          client_secret = $CLIENT_SECRET
+          token = $REFRESH_TOKEN
+          scope = drive
+          EOF
+
+          # Run the sync
           rclone sync . gdrive: \
             --drive-root-folder-id "$FOLDER_ID" \
-            --drive-supports-all-drives \
-            --drive-upload-cutoff 0 \
             --exclude ".git/**" \
             --exclude ".github/**" \
             --exclude ".venv/**" \
             --exclude "__pycache__/**" \
-            --exclude "*.pyc" \
             --exclude "prometheus_data/**" \
-            --create-empty-src-dirs \
             --verbose
