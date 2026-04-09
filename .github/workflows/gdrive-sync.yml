@@ -33,18 +33,13 @@ jobs:
         run: |
           rclone sync . gdrive: \
             --drive-root-folder-id "$FOLDER_ID" \
-            --drive-acknowledge-abuse \
-            --drive-keep-revision-forever \
+            --drive-supports-all-drives \
             --drive-upload-cutoff 0 \
-            --drive-chunk-size 32M \
-            --drive-use-trash \
             --exclude ".git/**" \
             --exclude ".github/**" \
             --exclude ".venv/**" \
             --exclude "__pycache__/**" \
             --exclude "*.pyc" \
-            --exclude "sorted/**" \
             --exclude "prometheus_data/**" \
             --create-empty-src-dirs \
-            --transfers 8 \
             --verbose
